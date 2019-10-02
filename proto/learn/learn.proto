@@ -1,0 +1,144 @@
+syntax = "proto3";
+import "proto/include/google/protobuf/any.proto";
+package learn;
+
+service LearnService {
+    // languages model
+    rpc FindLanguageList (FindRequest) returns (stream Language) {}
+    rpc GetLanguageById (GetRequest) returns (Language) {}
+    rpc CreateLanguage (CreateLanguageRequest) returns (Language) {}
+    rpc UpdateLanguage (UpdateLanguageRequest) returns (Language) {}
+    rpc UpdateLanguageById (UpdateLanguageByIdRequest) returns (Language) {}
+    rpc DeleteLanguage (FindRequest) returns (DeleteResult) {}
+    rpc DeleteLanguageById (GetRequest) returns (DeleteResult) {}
+    // topics model
+    rpc FindTopicList (FindRequest) returns (stream Topic) {}
+    rpc GetTopicById (GetRequest) returns (Topic) {}
+    rpc CreateTopic (CreateTopicRequest) returns (Topic) {}
+    rpc UpdateTopic (UpdateTopicRequest) returns (Topic) {}
+    rpc UpdateTopicById (UpdateLanguageByIdRequest) returns (Topic) {}
+    rpc DeleteTopic (FindRequest) returns (DeleteResult) {}
+    rpc DeleteTopicById (GetRequest) returns (DeleteResult) {}
+    // cards model
+    rpc FindCardList (FindRequest) returns (stream Topic) {}
+    rpc GetCardById (GetRequest) returns (Topic) {}
+    rpc CreateCard (CreateTopicRequest) returns (Topic) {}
+    rpc UpdateCard (UpdateTopicRequest) returns (Topic) {}
+    rpc UpdateCardById (UpdateLanguageByIdRequest) returns (Topic) {}
+    rpc DeleteCard (FindRequest) returns (DeleteResult) {}
+    rpc DeleteCardById (GetRequest) returns (DeleteResult) {}
+
+    rpc SayHello (HelloRequest) returns (HelloReply) {}
+}
+
+message FindRequest {
+    string query = 1;
+}
+
+message GetRequest {
+    string _id = 1;
+    string query = 2;
+}
+
+message CreateLanguageRequest {
+    string name = 1;
+    string flageUrl = 2;
+    alias alias = 3;
+}
+
+message UpdateLanguageRequest {
+    string query = 1;
+    CreateLanguageRequest obj = 2;
+    CreateLanguageRequest setObj = 3;
+}
+
+message UpdateLanguageByIdRequest {
+    string _id = 1;
+    CreateLanguageRequest obj = 2;
+    CreateLanguageRequest setObj = 3;
+}
+
+message DeleteResult {
+    bool state = 1;
+    int32 num = 2;
+}
+
+message Language {
+    string _id = 1;
+    string name = 2;
+    string flageUrl = 3;
+    string createdAt = 13;
+    string updatedAt = 14;
+    string deletedAt = 15;
+}
+
+message Topic {
+    string _id = 1;
+    string language_id = 2;
+    string name = 3;
+    string collection = 4;
+    string iconUrl = 5;
+}
+
+message CreateTopicRequest {
+    string name = 1;
+    string flageUrl = 2;
+    alias alias = 3;
+    google.protobuf.Any any = 7;
+}
+
+message UpdateTopicRequest {
+    string query = 1;
+    CreateTopicRequest obj = 2;
+    CreateTopicRequest setObj = 3;
+}
+
+message UpdateTopicByIdRequest {
+    string _id = 1;
+    CreateTopicRequest obj = 2;
+    CreateTopicRequest setObj = 3;
+}
+
+message Card {
+    string _id = 1;
+    string language_id = 2;
+    string topic_id = 3;
+    string name = 4;
+    string collection = 5;
+    string iconUrl = 6;
+}
+
+message CreateCardRequest {
+    string name = 1;
+    string collection = 2;
+    string iconUrl = 3;
+    google.protobuf.Any any = 7;
+}
+
+message UpdateCardRequest {
+    string query = 1;
+    CreateCardRequest obj = 2;
+    CreateCardRequest setObj = 3;
+}
+
+message UpdateCardByIdRequest {
+    string _id = 1;
+    CreateCardRequest obj = 2;
+    CreateCardRequest setObj = 3;
+}
+
+message alias {
+    string eng = 1;
+    string zh = 2;
+    string esp = 3;
+    string pe = 4;
+    string arb = 5;
+}
+
+message HelloRequest {
+    string name = 1;
+}
+
+message HelloReply {
+    string message = 1;
+}
