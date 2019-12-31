@@ -9,14 +9,14 @@ import (
 	"github.com/robfig/cron/v3"
 
 	"github.com/mikudos/mikudos-schedule/config"
-	pb "github.com/mikudos/mikudos-schedule/proto/ai"
+	aipb "github.com/mikudos/mikudos-schedule/proto/ai"
 	"github.com/mikudos/mikudos-schedule/schedule"
 	"google.golang.org/grpc"
 )
 
 var (
 	conns     = make(map[string]*grpc.ClientConn)
-	clients   = make(map[string]pb.AiServiceClient)
+	clients   = make(map[string]interface{})
 	err       error
 	callIndex = 1
 )
@@ -37,7 +37,13 @@ func setUpClientConn(connName string) {
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
-	clients[connName] = pb.NewAiServiceClient(conns[connName])
+	var client interface{}
+	switch connName {
+	case "ai":
+		client = aipb.NewAiServiceClient(conns[connName])
+		break
+	}
+	clients[connName] = client
 }
 
 // AiService AiService
@@ -47,7 +53,7 @@ type AiService struct {
 }
 
 type baseService struct {
-	HelloRequest *pb.HelloRequest
+	HelloRequest *aipb.HelloRequest
 }
 
 // ClientFunc ClientFunc
@@ -61,7 +67,7 @@ func (ai *AiService) ClientFunc() {
 	// Contact the server and print out its response.
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	r, err := clients[serviceName].SayHello(ctx, ai.HelloRequest)
+	r, err := clients[serviceName].(aipb.AiServiceClient).SayHello(ctx, ai.HelloRequest)
 	log.Printf("SayHello called %d times", callIndex)
 	callIndex++
 	if err != nil {
