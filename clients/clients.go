@@ -1,24 +1,17 @@
 package clients
 
 import (
-	"context"
 	"fmt"
 	"log"
-	"time"
-
-	"github.com/robfig/cron/v3"
 
 	"github.com/mikudos/mikudos-schedule/config"
 	aipb "github.com/mikudos/mikudos-schedule/proto/ai"
-	"github.com/mikudos/mikudos-schedule/schedule"
 	"google.golang.org/grpc"
 )
 
 var (
-	conns     = make(map[string]*grpc.ClientConn)
-	clients   = make(map[string]interface{})
-	err       error
-	callIndex = 1
+	conns   = make(map[string]*grpc.ClientConn)
+	clients = make(map[string]interface{})
 )
 
 func init() {
@@ -26,7 +19,7 @@ func init() {
 	setUpClientConn("ai")
 }
 
-func setUpClientConn(connName string) {
+func setUpClientConn(connName string) (err error) {
 	confLoc := fmt.Sprintf("grpcClients.%s", connName)
 	grpcAddr := config.RuntimeViper.GetString(confLoc)
 	if grpcAddr == "" {
@@ -44,43 +37,5 @@ func setUpClientConn(connName string) {
 		break
 	}
 	clients[connName] = client
-}
-
-// AiService AiService
-type AiService struct {
-	baseService
-	jobID cron.EntryID
-}
-
-type baseService struct {
-	HelloRequest *aipb.HelloRequest
-}
-
-// ClientFunc ClientFunc
-func (ai *AiService) ClientFunc() {
-	serviceName := "ai"
-	state := conns[serviceName].GetState()
-	if state.String() != "READY" {
-		conns[serviceName].Close()
-		setUpClientConn(serviceName)
-	}
-	// Contact the server and print out its response.
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	r, err := clients[serviceName].(aipb.AiServiceClient).SayHello(ctx, ai.HelloRequest)
-	log.Printf("SayHello called %d times", callIndex)
-	callIndex++
-	if err != nil {
-		log.Printf("could not call method on %s: %v", serviceName, err)
-	} else {
-		log.Printf("call return: %s", r.GetMessage())
-	}
-	ai.checkCancelList()
-}
-
-func (ai *AiService) checkCancelList() {
-	if _, ok := schedule.OneTimeJobs[ai.jobID]; ok {
-		schedule.Cron.Remove(ai.jobID)
-		delete(schedule.OneTimeJobs, ai.jobID)
-	}
+	return err
 }

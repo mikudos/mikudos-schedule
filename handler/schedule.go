@@ -4,39 +4,24 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/robfig/cron/v3"
 	"github.com/mikudos/mikudos-schedule/broker"
 	"github.com/mikudos/mikudos-schedule/clients"
 	pb "github.com/mikudos/mikudos-schedule/proto/schedule"
 	"github.com/mikudos/mikudos-schedule/schedule"
+	"github.com/robfig/cron/v3"
 )
 
 // AddGrpcCron add cron to emit grpc-call events
 func AddGrpcCron(scheduleStr string, grpc *pb.GrpcCall, scs *pb.Schedule, isOneTime bool) (jobID cron.EntryID, err error) {
 	// 解析并校验grpc信息是否正确
-	switch grpc.GetClientName() {
+	clientName := grpc.GetClientName()
+	switch clientName {
 	case "ai":
 		client := clients.AiService{}
-		switch grpc.GetMethodName() {
-		case "SayHello":
-			json.Unmarshal([]byte(grpc.PayloadStr), &client.HelloRequest)
-			// cV := reflect.ValueOf(&client)
-			// log.Println("ai method:", cV.MethodByName(grpc.MethodName).Call(nil))
-			jobID, err = schedule.Cron.AddFunc(scheduleStr, func() {
-				client.ClientFunc()
-				checkCancelList(jobID)
-			})
-		case "SayHi":
-			json.Unmarshal([]byte(grpc.PayloadStr), &client.HelloRequest)
-			// cV := reflect.ValueOf(&client)
-			// log.Println("ai method:", cV.MethodByName(grpc.MethodName).Call(nil))
-			jobID, err = schedule.Cron.AddFunc(scheduleStr, func() {
-				client.ClientFunc()
-				checkCancelList(jobID)
-			})
-		default:
-			return 0, fmt.Errorf("set cron task fail: %s", "没有对应grpc method")
-		}
+		jobID, err = schedule.Cron.AddFunc(scheduleStr, func() {
+			client.ClientFunc(grpc)
+			checkCancelList(jobID)
+		})
 	case "learn":
 	case "messages":
 	case "users":
