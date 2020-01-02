@@ -53,7 +53,7 @@ func (b *Broker) Send(m Msg) {
 	case fail := <-BrokerInstance.producer.Errors():
 		fmt.Printf("err: %s\n", fail.Err.Error())
 		defer BrokerInstance.producer.Close()
-
+		generateProducer()
 		break
 	}
 }
