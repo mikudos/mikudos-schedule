@@ -34,9 +34,9 @@ func addTestGrpc() {
 
 func addTestBroker() {
 	id, err := AddBrokerCron("@every 10s", &pb.BrokerEvent{
-		Topic:   "test-topic",
+		Topic:   "ai",
 		Key:     "test-key",
-		Message: "{test_message:test-message}",
+		Message: "{\"methodName\": \"SayHello\",\"PayloadStr\":\"test-message\"}",
 	}, &pb.Schedule{
 		ScheduleName:    "测试 broker 任务",
 		ScheduleComment: "每隔5秒钟推送一次broker",
