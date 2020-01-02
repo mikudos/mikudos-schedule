@@ -7,6 +7,11 @@ import (
 )
 
 func init() {
+	// addTestGrpc()
+	addTestBroker()
+}
+
+func addTestGrpc() {
 	id, err := AddGrpcCron("@every 5s", &pb.GrpcCall{
 		ClientName: "ai",
 		MethodName: "SayHello",
@@ -19,6 +24,22 @@ func init() {
 	}, &pb.Schedule{
 		ScheduleName:    "测试 ai.SayHello 任务",
 		ScheduleComment: "每隔5秒钟调用一次ai.SayHello",
+	}, false)
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println("cron id:", id)
+	}
+}
+
+func addTestBroker() {
+	id, err := AddBrokerCron("@every 10s", &pb.BrokerEvent{
+		Topic:   "test-topic",
+		Key:     "test-key",
+		Message: "{test_message:test-message}",
+	}, &pb.Schedule{
+		ScheduleName:    "测试 broker 任务",
+		ScheduleComment: "每隔5秒钟推送一次broker",
 	}, false)
 	if err != nil {
 		log.Println(err)

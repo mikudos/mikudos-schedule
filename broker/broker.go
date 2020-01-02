@@ -14,6 +14,7 @@ var BrokerInstance Broker
 
 // Broker aaa
 type Broker struct {
+	config   *sarama.Config
 	producer sarama.AsyncProducer
 	Client   sarama.ConsumerGroup
 }
@@ -39,20 +40,21 @@ func (b *Broker) Send(m Msg) {
 		Key:   sarama.StringEncoder(m.Key),
 	}
 
-	for {
-		fmt.Scanln(&m.Message)
-		msg.Value = sarama.ByteEncoder(m.Message)
-		fmt.Printf("input [%s]\n", m.Message)
+	msg.Value = sarama.ByteEncoder(m.Message)
+	fmt.Printf("input [%s]\n", m.Message)
 
-		// // send to chain
-		BrokerInstance.producer.Input() <- msg
+	// // send to chain
+	BrokerInstance.producer.Input() <- msg
 
-		select {
-		case suc := <-BrokerInstance.producer.Successes():
-			fmt.Printf("offset: %d,  timestamp: %s", suc.Offset, suc.Timestamp.String())
-		case fail := <-BrokerInstance.producer.Errors():
-			fmt.Printf("err: %s\n", fail.Err.Error())
-		}
+	select {
+	case suc := <-BrokerInstance.producer.Successes():
+		fmt.Printf("offset: %d,  timestamp: %s", suc.Offset, suc.Timestamp.String())
+		break
+	case fail := <-BrokerInstance.producer.Errors():
+		fmt.Printf("err: %s\n", fail.Err.Error())
+		defer BrokerInstance.producer.Close()
+
+		break
 	}
 }
 
@@ -66,17 +68,25 @@ func init() {
 	config.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategyRoundRobin
 	config.Consumer.Offsets.Initial = sarama.OffsetOldest
 
-	BrokerInstance = Broker{}
+	BrokerInstance = Broker{config: config}
 	var err error
-	BrokerInstance.producer, err = sarama.NewAsyncProducer(strings.Split(brokers, ","), config)
+	err = generateProducer()
 	if err != nil {
-		fmt.Printf("producer_test create producer error :%s\n", err.Error())
+		log.Printf("producer_test create producer error :%s\n", err.Error())
 		return
 	}
-
-	BrokerInstance.Client, err = sarama.NewConsumerGroup(strings.Split(brokers, ","), group, config)
+	err = generateClient()
 	if err != nil {
 		log.Panicf("Error creating consumer group client: %v", err)
 	}
-	defer BrokerInstance.producer.AsyncClose()
+}
+
+func generateProducer() (err error) {
+	BrokerInstance.producer, err = sarama.NewAsyncProducer(strings.Split(brokers, ","), BrokerInstance.config)
+	return err
+}
+
+func generateClient() (err error) {
+	BrokerInstance.Client, err = sarama.NewConsumerGroup(strings.Split(brokers, ","), group, BrokerInstance.config)
+	return err
 }

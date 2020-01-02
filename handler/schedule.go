@@ -52,7 +52,7 @@ func AddGrpcCron(scheduleStr string, grpc *pb.GrpcCall, scs *pb.Schedule, isOneT
 func AddBrokerCron(scheduleStr string, brokerEvent *pb.BrokerEvent, scs *pb.Schedule, isOneTime bool) (jobID cron.EntryID, err error) {
 	jobID, err = schedule.Cron.AddFunc(scheduleStr, func() {
 		fmt.Println("run oneTime cron job", schedule.CronJobs)
-		broker.BrokerInstance.Send(broker.Msg{Topic: brokerEvent.GetTopic(), Key: brokerEvent.GetKey(), Message: brokerEvent.GetMessage()})
+		go broker.BrokerInstance.Send(broker.Msg{Topic: brokerEvent.GetTopic(), Key: brokerEvent.GetKey(), Message: brokerEvent.GetMessage()})
 		checkCancelList(jobID)
 	})
 	scs.Id = int32(jobID)
